@@ -1,10 +1,10 @@
 === ThemeX ===
 Contributors: Xnuiem
 Donate link: http://www.thisrand.com/scripts/themex
-Tags: theme
+Tags: theme, plugin, admin
 Requires at least: 2.6
 Tested up to: 2.7
-Version: 0.1
+Stable Tag: 0.1
 
 A lightweight plugin that will allow the automatic rotation of a pair of themes based on the time of day.
 
@@ -30,8 +30,13 @@ None Yet
 <b>0.1</b><br />
 Initial Release
 
+<b>0.2</b><br />
+Added Time Zone setting
+Added Date based rotation - Thanks reuben lee b
+
 
 == Screenshots==
+None Yet
 
 
 == Demos ==
@@ -42,6 +47,7 @@ Initial Release
 
 == To Do ==
 Add Zip code recognition and time look up
+
 
 
 

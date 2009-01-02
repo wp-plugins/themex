@@ -16,11 +16,30 @@ class themex_functions {
 		$current = get_option("template");
 		$options = get_option("themex_options");
 
-		if (count($options) == 4){
-			if (($time > $options['dayStart'] - 1 && $time < $options['nightStart']) && $current != $options['dayTheme']){
+		$offset = 0;
+		if ($options["timeZone"]){
+        	$server = date("O");
+        	if ($server != $options["timeZone"]){
+				if ($server < 0){
+					if ($options["timeZone"] < 0){
+						$offset = $server - $options["timeZone"];
+					}
+
+				}
+				else if ($server > 0){
+
+				}
+				else {  //$server == 0
+
+				}
+        	}
+		}
+        //print($offset);
+		if (count($options) > 3){
+			if (((($time > $options['dayStart'] - 1) + $offset) && ($time < $options['nightStart']) + $offset) && $current != $options['dayTheme']){
 				$this->changeTheme($options['dayTheme']);
 			}
-			else if (($time < $options['dayStart'] || $time > $options['nightStart'] - 1) && $current != $options['nightTheme']){
+			else if ((($time < $options['dayStart'] + $offset) || ($time > $options['nightStart'] - 1) + $offset) && $current != $options['nightTheme']){
 				$this->changeTheme($options['nightTheme']);
 			}
 		}
