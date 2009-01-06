@@ -28,10 +28,11 @@ class themex_admin {
         add_management_page('ThemeX', 'ThemeX', 5, __FILE__, array($this, 'themex_admin_page'));
     }
 
-    function timeZoneList(){
+    function formLists(){
     	/**
-    	* Produces a list of time zones in an array
+    	* Produces Lists for the usage of the forms
     	* @return	array	$this->timeZoneArray	List of time zones in array format.
+    	* @return 	array	$this->monthArray		List of months in array format.
     	*/
 
     	$tz = array();
@@ -70,6 +71,21 @@ class themex_admin {
 
 		$this->timeZoneArray = $tz;
 
+		$months = array();
+		$months["1"] = "Jan";
+		$months["2"] = "Feb";
+		$months["3"] = "Mar";
+		$months["4"] = "Apr";
+		$months["5"] = "May";
+		$months["6"] = "Jun";
+		$months["7"] = "Jul";
+		$months["8"] = "Aug";
+		$months["9"] = "Sep";
+		$months["10"] = "Oct";
+		$months["11"] = "Nov";
+		$months["12"] = "Dec";
+		$this->months = $months;
+
     }
 
     function themex_admin_page(){
@@ -78,28 +94,49 @@ class themex_admin {
     	*/
 
         clearstatcache();
-        $this->timeZoneList();
+        $this->formLists();
         $options = get_option('themex_options');
 		if ($_POST['action'] == "update"){
-                if ($_POST['type'] == "simple"){
-                    $options["type"]       = "simple";
-                	$options["dayTheme"]   = $_POST["dayTheme"];
-                	$options["dayStart"]   = $_POST["dayStart"];
-                	$options["nightTheme"] = $_POST["nightTheme"];
-                	$options["nightStart"] = $_POST["nightStart"];
+        	if ($_POST['type'] == "simple"){
+            	$options["type"]       = "simple";
+                $options["dayTheme"]   = $_POST["dayTheme"];
+                $options["dayStart"]   = $_POST["dayStart"];
+                $options["nightTheme"] = $_POST["nightTheme"];
+                $options["nightStart"] = $_POST["nightStart"];
 
-					$message = 'Options Updated.  Simple Rotation Active.';
-				}
-				else if ($_POST["type"] == "time"){
-                    $options["timeZone"] = $this->timeZoneArray[$_POST["timezone"]];
-                    $options["timeZoneAbbr"] = $_POST["timezone"];
-                    $message = 'Time Zone Updated';
-				}
-				else {
+				$message = 'Options Updated.  Simple Rotation Active.';
+			}
+			else if ($_POST["type"] == "time"){
+                $options["timeZone"] = $this->timeZoneArray[$_POST["timezone"]];
+                $options["timeZoneAbbr"] = $_POST["timezone"];
+                $message = 'Time Zone Updated';
+			}
+			else if ($_POST["type"] == "date"){
+  				for($m=1;$m<13;$m++){
+      		  		$fieldName = "theme" . $m;
+	      		  	$monthName = "theme" . $m . "-month";
+    	    		$dayName   = "theme" . $m . "-day";
+     		   		$yearName  = "theme" . $m . "-year";
+     		   		$timeName  = "theme" . $m . "-time";
 
-				}
+     		   		if ($_POST[$dayName] != '' && $_POST[$yearName] != ''){
+	     		   		$options[$fieldName] = $_POST[$fieldName];
+     		   			$options[$monthName] = $_POST[$monthName];
+     		   			$options[$dayName]   = $_POST[$dayName];
+     		   			$options[$yearName]  = $_POST[$yearName];
+     		   			$options[$timeName]  = $_POST[$timeName];
+     		   		}
+     		   		else {
+	     		   		$options[$fieldName] = '';
+     		   			$options[$monthName] = '';
+     		   			$options[$dayName]   = '';
+     		   			$options[$yearName]  = '';
+     		   			$options[$timeName]  = '';
+     		   		}
+     		   	}
+			}
 
-				update_option('themex_options', $options);
+			update_option('themex_options', $options);
 
 		}
 
@@ -109,13 +146,20 @@ class themex_admin {
 			$tArray[$t["Template"]] = $t["Name"];
 		}
 
+		$text .= "<style>";
+		$text .= "input.themex-day { width: 25px; } ";
+		$text .= "input.themex-year { width: 40px; } ";
+		$text .= "</style>";
+
 
         $text .= "<div class=\"wrap\">";
 
 
         $text .= "<h2>ThemeX</h2>";
-        $text .= "ThemeX automatically alternates between two themes based on the time of day.";
-        $text .= "<br />Select your two themes and when each should become the active theme and press 'Save Changes'.";
+        $text .= "ThemeX automatically alternates themes based on the time of day or date.";
+        $text .= "<br />Select your options below and press 'Save Changes'.  Simple Rotation and Date ";
+        $text .= "Based are mutually exclusive, meaning they cannot be used at the same time, it is ";
+        $text .= "either one or the other.";
 
         if ($message){ $text .= "<br /><b><span style=\"color:#FF0000;\">$message</span></b>"; }
 		$text .= "<div id=\"poststuff\" class=\"metabox-holder\">";
@@ -141,7 +185,6 @@ class themex_admin {
 
         $text .= "<select name=\"timezone\">";
 
-
         $used = false;
 
         foreach(array_keys($this->timeZoneArray) as $t){
@@ -162,18 +205,12 @@ class themex_admin {
         $text .= "</p></form>";
 		$text .= "</div></div>";
 
-
-
-
-
 		$text .= "<div class=\"postbox\">";
         $text .= "<h3><label>Simple Rotation</label></h3>";
 		$text .= "<div class=\"inside\">";
         $text .= "<form method=\"post\" action=\"\">";
         $text .= "<input type=\"hidden\" name=\"action\" value=\"update\" />";
         $text .= "<input type=\"hidden\" name=\"type\" value=\"simple\" />";
-
-
 
         $text .= "<table class=\"form-table\">";
         $text .= "<tr class=\"form-field form-required\">";
@@ -221,23 +258,67 @@ class themex_admin {
         $text .= "</p></form>";
         $text .= "</div></div>";
 
-
-
         $text .= "<div class=\"postbox\">";
         $text .= "<h3><label>Date Based Rotation</label></h3>";
 		$text .= "<div class=\"inside\">";
+		$text .= "These fields will be evaluated in the order they are entered here. ";
+		$text .= "When ThemeX finds the last theme currently active, it will use it and stop there, ";
+		$text .= "so if there are other themes under it, that start before, they will not show up. ";
+		$text .= "<br /><br /><b>For Example:</b> <br />";
+		$text .= "If Theme 1 starts on Jan 06, Theme 2 on March 15, Theme 3 on Feburary 26, Theme 4 on November 11, ";
+		$text .= "and Theme 5 on April 1 ";
+		$text .= " and the current date is June 14, Theme 2 will be active.  1 is active, but 2 is newer, 3 is newer than one";
+		$text .= " but not 2, so it is skipped, and 4 has not passed yet, so evaluation is stopped, never to get to Theme 4.";
+		$text .= "  This is done in order to attempt to keep the front-end processing as quick as possible.";
 
+		$text .= "<br /><br />";
+        $text .= "<form method=\"post\" action=\"\">";
+        $text .= "<input type=\"hidden\" name=\"action\" value=\"update\" />";
+        $text .= "<input type=\"hidden\" name=\"type\" value=\"date\" />";
+		$text .= "<table class=\"form-table\">";
+		for($m=1;$m<13;$m++){
+        	$fieldName = "theme" . $m;
+        	$monthName = "theme" . $m . "-month";
+        	$dayName   = "theme" . $m . "-day";
+        	$yearName  = "theme" . $m . "-year";
+        	$timeName  = "theme" . $m . "-time";
+        	$text .= "<tr class=\"form-field\">";
+       	 	$text .= "<th scope=\"row\" valign=\"top\"><label for=\"$fieldName\">Theme $m:</label></th>";
+        	$text .= "<td><select name=\"$fieldName\">";
 
-		$text .= "</div></div>";
+	        foreach(array_keys($tArray) as $t){
+        		if ($t == $options[$fieldName]){ $s = "selected"; }
+        		else { $s = '';  }
+        		$text .= "<option value=\"$t\" $s>" . $tArray[$t] . "</option>";
+	        }
+        	$text .= "</select> starts on ";
+        	$text .= "<select name=\"$monthName\">";
+        	foreach(array_keys($this->months) as $month){
+        		if ($month == $options[$monthName]){ $s = "selected"; }
+        		else { $s = ''; }
 
+        		$text .= "<option value=\"$month\" $s>" . $this->months[$month] . "</option>";
+        	}
+        	$text .= "</select>";
+        	$text .= "<input class=\"themex-day\" type=\"text\" maxlength=\"2\" name=\"$dayName\" value=\"" . $options[$dayName] . "\">,";
+        	$text .= " <input class=\"themex-year\"type=\"text\" maxlength=\"4\" name=\"$yearName\" value=\"" . $options[$yearName] . "\">";
 
+        	$text .= " at <select name=\"$timeName\">";
+        	for($i=0;$i<24;$i++){
+        		if (strlen($i) == 1){ $v = "0" . $i; }
+        		else { $v = $i; }
+        		if ($v == $options[$timeName]){ $s = "selected"; }
+        		else { $s = ''; }
+    	    	$text .= "<option value=\"$v\" $s>$v</option>";
+            }
+        	$text .= "</select> hours";
+        	$text .= "</td></tr>";
+		}
+		$text .= "</table>";
+		$text .= "<p class=\"submit\"><input type=\"submit\" name=\"Submit\" value=\"Save Changes\" />";
+        $text .= "</p></form>";
 
-
-
-
-
-
-
+ 		$text .= "</div></div>";
         $text .= "</div></div>";
         print($text);
 
