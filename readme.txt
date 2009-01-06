@@ -46,7 +46,7 @@ None Yet
 
 
 == To Do ==
-Add Zip code recognition and time look up
+Nothing at this point.
 
 
 
