@@ -91,7 +91,10 @@ class themex_admin {
     function themex_admin_page(){
     	/**
     	* Creates the Admin page
+    	*
     	*/
+
+		global $pluginBase;
 
         clearstatcache();
         $this->formLists();
@@ -112,6 +115,7 @@ class themex_admin {
                 $message = 'Time Zone Updated';
 			}
 			else if ($_POST["type"] == "date"){
+  				$options["type"] = "date";
   				for($m=1;$m<13;$m++){
       		  		$fieldName = "theme" . $m;
 	      		  	$monthName = "theme" . $m . "-month";
@@ -262,17 +266,23 @@ class themex_admin {
         $text .= "<h3><label>Date Based Rotation</label></h3>";
 		$text .= "<div class=\"inside\">";
 		$text .= "These fields will be evaluated in the order they are entered here. ";
-		$text .= "When ThemeX finds the last theme currently active, it will use it and stop there, ";
-		$text .= "so if there are other themes under it, that start before, they will not show up. ";
+		$text .= "The one with the latest date that has passed will be the active theme.";
+		$text .= "  Any entries after a blank line or a date that has not yet passed will be ignored.";
 		$text .= "<br /><br /><b>For Example:</b> <br />";
-		$text .= "If Theme 1 starts on Jan 06, Theme 2 on March 15, Theme 3 on Feburary 26, Theme 4 on November 11, ";
-		$text .= "and Theme 5 on April 1 ";
-		$text .= " and the current date is June 14, Theme 2 will be active.  1 is active, but 2 is newer, 3 is newer than one";
-		$text .= " but not 2, so it is skipped, and 4 has not passed yet, so evaluation is stopped, never to get to Theme 4.";
-		$text .= "  This is done in order to attempt to keep the front-end processing as quick as possible.";
+		$text .= "If Theme 1 starts on Jan 06, Theme 2 on March 15, and Theme 3 on Feburary 26, ";
+		$text .= " and the current date is June 14, Theme 2 will be active.  1 could be active, but 2 is newer, 3 is newer than 1";
+		$text .= " but not 2, so it is skipped.";
+		$text .= "<br /><br /><b>Another Example:</b> <br />";
+		$text .= "If Theme 1 starts on Jan 06, Theme 2 on July 15, and Theme 3 on Feburary 26, ";
+		$text .= " and the current date is June 14, Theme 1 will be active.  1 is active because 2 has not yet passed.";
+		$text .= " 3 is not active because although the date is in the past, 2 has not yet passed.";
+
+		//$text .= "  This is done in order to attempt to keep the front-end processing as quick as possible.";
 
 		$text .= "<br /><br />";
-        $text .= "<form method=\"post\" action=\"\">";
+		$text .= "<script type='text/javascript' src='../wp-content/plugins/themex/javascript/themex.js'></script>";
+
+        $text .= "<form method=\"post\" action=\"\" name=\"dateForm\">";
         $text .= "<input type=\"hidden\" name=\"action\" value=\"update\" />";
         $text .= "<input type=\"hidden\" name=\"type\" value=\"date\" />";
 		$text .= "<table class=\"form-table\">";
@@ -284,7 +294,7 @@ class themex_admin {
         	$timeName  = "theme" . $m . "-time";
         	$text .= "<tr class=\"form-field\">";
        	 	$text .= "<th scope=\"row\" valign=\"top\"><label for=\"$fieldName\">Theme $m:</label></th>";
-        	$text .= "<td><select name=\"$fieldName\">";
+        	$text .= "<td><select name=\"$fieldName\" id=\"$fieldName\">";
 
 	        foreach(array_keys($tArray) as $t){
         		if ($t == $options[$fieldName]){ $s = "selected"; }
@@ -292,7 +302,7 @@ class themex_admin {
         		$text .= "<option value=\"$t\" $s>" . $tArray[$t] . "</option>";
 	        }
         	$text .= "</select> starts on ";
-        	$text .= "<select name=\"$monthName\">";
+        	$text .= "<select name=\"$monthName\" id=\"$monthName\">";
         	foreach(array_keys($this->months) as $month){
         		if ($month == $options[$monthName]){ $s = "selected"; }
         		else { $s = ''; }
@@ -300,10 +310,10 @@ class themex_admin {
         		$text .= "<option value=\"$month\" $s>" . $this->months[$month] . "</option>";
         	}
         	$text .= "</select>";
-        	$text .= "<input class=\"themex-day\" type=\"text\" maxlength=\"2\" name=\"$dayName\" value=\"" . $options[$dayName] . "\">,";
-        	$text .= " <input class=\"themex-year\"type=\"text\" maxlength=\"4\" name=\"$yearName\" value=\"" . $options[$yearName] . "\">";
+        	$text .= "<input id=\"$dayName\" class=\"themex-day\" type=\"text\" maxlength=\"2\" name=\"$dayName\" value=\"" . $options[$dayName] . "\">,";
+        	$text .= " <input id=\"$yearName\" class=\"themex-year\"type=\"text\" maxlength=\"4\" name=\"$yearName\" value=\"" . $options[$yearName] . "\">";
 
-        	$text .= " at <select name=\"$timeName\">";
+        	$text .= " at <select name=\"$timeName\" id=\"$timeName\">";
         	for($i=0;$i<24;$i++){
         		if (strlen($i) == 1){ $v = "0" . $i; }
         		else { $v = $i; }
@@ -311,7 +321,16 @@ class themex_admin {
         		else { $s = ''; }
     	    	$text .= "<option value=\"$v\" $s>$v</option>";
             }
-        	$text .= "</select> hours";
+        	$text .= "</select>";
+
+        	if ($m != 1){
+        		$text .= "<a href=\"javascript:themexMove('$m', 'up');\">";
+        		$text .= "<img src=\"../wp-content/plugins/themex/images/arrow_up_blue.png\" border=\"0\"></a> ";
+			}
+			if ($m != 12){
+        		$text .= "<a href=\"javascript:themexMove('$m', 'down');\">";
+        		$text .= "<img src=\"../wp-content/plugins/themex/images/arrow_down_blue.png\" border=\"0\"></a> ";
+			}
         	$text .= "</td></tr>";
 		}
 		$text .= "</table>";

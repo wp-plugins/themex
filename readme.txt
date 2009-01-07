@@ -4,7 +4,7 @@ Donate link: http://www.thisrand.com/scripts/themex
 Tags: theme, plugin, admin
 Requires at least: 2.6
 Tested up to: 2.7
-Stable Tag: 0.1
+Stable Tag: 0.2
 
 A lightweight plugin that will allow the automatic rotation of a pair of themes based on the time of day.
 
@@ -33,6 +33,7 @@ Initial Release
 <b>0.2</b><br />
 Added Time Zone setting
 Added Date based rotation - Thanks reuben lee b
+Dropped the changeTheme() function to use WP switch_theme()
 
 
 == Screenshots==
